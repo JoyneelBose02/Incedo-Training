@@ -18,9 +18,6 @@ public class PrintPalindrome {
             rev = (rev*10) + val;
             temp = temp/10;
         }
-        if(rev == n){
-            return true;
-        }
-        return false;
+        return (rev==n);
     }
 }
