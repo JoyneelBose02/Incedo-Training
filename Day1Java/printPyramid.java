@@ -1,5 +1,5 @@
 package Day1Java;
-public class printPyramid {
+public class PrintPyramid {
     public static void main(String[] args) {
         int rows = 5; // Number of rows
 

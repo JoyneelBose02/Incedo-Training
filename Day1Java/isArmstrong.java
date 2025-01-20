@@ -1,6 +1,6 @@
-import java.util.*;
 package Day1Java;
-public class isArmstrong {
+import java.util.*;
+public class IsArmstrong{
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         System.out.print("Enter the number: ");
@@ -24,6 +24,7 @@ public class isArmstrong {
         else{
             System.out.println(false);
         }
+        sc.close();
 
     }
 }

@@ -1,6 +1,6 @@
 
 package Day1Java;
-public class printArmstrong {
+public class PrintArmstrong {
     public static void main(String[] args) {
         for(int i = 1; i<= 1000; i++){
             if(isArmstrong(i)){

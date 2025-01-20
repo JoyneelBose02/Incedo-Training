@@ -1,6 +1,6 @@
-import java.util.*;
 package Day1Java;
-public class findSumDigits {
+import java.util.*;
+public class FindSumDigits {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         System.out.print("Enter the number: ");
@@ -11,5 +11,6 @@ public class findSumDigits {
             num = num/10;
         }
         System.out.println(sum);
+        sc.close();
     }
 }

@@ -10,5 +10,6 @@ public class FindSum {
             sum+=i;
         }
         System.out.println(sum);
+        sc.close();
     }
 }

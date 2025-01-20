@@ -1,6 +1,6 @@
-import java.util.Scanner;
 package Day1Java;
-public class isPrime {
+import java.util.Scanner;
+public class IsPrime {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         int n = sc.nextInt();

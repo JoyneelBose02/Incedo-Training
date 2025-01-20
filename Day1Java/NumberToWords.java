@@ -1,5 +1,5 @@
-import java.util.Scanner;
 package Day1Java;
+import java.util.Scanner;
 public class NumberToWords {
     public static void main(String[] args) {
         String[] arr = {"Zero", "One", "Two", "Three", "Four","Five", "Six", "Seven", "Eight", "Nine"};

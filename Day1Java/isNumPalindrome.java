@@ -1,6 +1,6 @@
-import java.util.Scanner;
 package Day1Java;
-public class isNumPalindrome {
+import java.util.Scanner;
+public class IsNumPalindrome {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter the Number: ");
@@ -18,5 +18,6 @@ public class isNumPalindrome {
         else{
             System.out.println(true);
         }
+        sc.close();
     }
 }

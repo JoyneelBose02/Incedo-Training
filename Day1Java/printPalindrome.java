@@ -1,6 +1,6 @@
-import java.util.Scanner;
 package Day1Java;
-public class printPalindrome {
+import java.util.Scanner;
+public class PrintPalindrome {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         int n = sc.nextInt();

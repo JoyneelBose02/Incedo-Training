@@ -1,5 +1,5 @@
 package Day1Java;
-public class printStarPattern {
+public class PrintStarPattern {
     public static void main(String[] args) {
         int rows = 5; // Number of rows
 
