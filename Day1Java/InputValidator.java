@@ -3,12 +3,13 @@ package Day1Java;
 import java.util.regex.*;
 import java.util.Scanner;
 
+
 public class InputValidator {
 
-    // Method to validate name (alphanumeric only)
+    // Method to validate name (alphanumeric + spaces)
     public static boolean isValidName(String name) {
-        // Regular expression for alphanumeric (letters and digits only)
-        String regex = "^[a-zA-Z0-9]+$";
+        // Regular expression for alphanumeric characters and spaces
+        String regex = "^[a-zA-Z0-9 ]+$";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(name);
         return matcher.matches();
@@ -57,35 +58,43 @@ public class InputValidator {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Sample inputs to be taken from user
-        System.out.print("Enter your name: ");
-        String name = scanner.nextLine();
+        // Validate name input
+        String name;
+        while (true) {
+            System.out.print("Enter your name: ");
+            name = scanner.nextLine();
+            if (isValidName(name)) {
+                System.out.println("Valid name.");
+                break;  // Exit the loop when the name is valid
+            } else {
+                System.out.println("Invalid name. Name must be alphanumeric and can include spaces.");
+            }
+        }
 
-        // Validate the name first
-        if (isValidName(name)) {
-            System.out.println("Valid name.");
-            
-            // Proceed to email validation only if name is valid
+        // Validate email input
+        String email;
+        while (true) {
             System.out.print("Enter your email: ");
-            String email = scanner.nextLine();
-            
+            email = scanner.nextLine();
             if (isValidEmail(email)) {
                 System.out.println("Valid email.");
-                
-                // Proceed to date validation only if email is valid
-                System.out.print("Enter your date (dd MM yyyy): ");
-                String date = scanner.nextLine();
-                
-                if (isValidDate(date)) {
-                    System.out.println("Valid date.");
-                } else {
-                    System.out.println("Invalid date.");
-                }
+                break;  // Exit the loop when the email is valid
             } else {
                 System.out.println("Invalid email. Email must end with @gmail.com.");
             }
-        } else {
-            System.out.println("Invalid name. Name must be alphanumeric.");
+        }
+
+        // Validate date input
+        String date;
+        while (true) {
+            System.out.print("Enter your date (dd MM yyyy): ");
+            date = scanner.nextLine();
+            if (isValidDate(date)) {
+                System.out.println("Valid date.");
+                break;  // Exit the loop when the date is valid
+            } else {
+                System.out.println("Invalid date. Please use the format dd MM yyyy and ensure it's a valid date.");
+            }
         }
 
         scanner.close();
