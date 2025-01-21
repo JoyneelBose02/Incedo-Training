@@ -50,8 +50,8 @@ public class ReportClass {
 
         ReportCard student2 = new ReportCard("Rohan", "Singh", "12B");
         student2.addSubject("Math","A", "Excellent");
-        student2.addSubject("Biology", "B", "Good");
-        student2.addSubject("Physics","C", "Satisfactory");
+        student2.addSubject("Biology", "C", "Satisfactory");
+        student2.addSubject("Physics","B", "Good");
         
         //Making an object of Reportcard printer
         ReportCardPrinter printer = new ReportCardPrinter();
