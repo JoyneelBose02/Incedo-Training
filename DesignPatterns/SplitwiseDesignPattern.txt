@@ -1,0 +1,11 @@
+Splitwise system 
+
+Strategy Pattern : - We can build a billSplitter where different strategies/methods:
+	equalSplit and percentage split: These two strategies will be followed so that the problem statement
+	"Dividing the bill" is solved
+
+User - Singleton Pattern : Making a single instance of a particular user 
+
+Expense: Observer Pattern: Everytime an expense is added -> observer pattern would notify the required user
+	about the update
+

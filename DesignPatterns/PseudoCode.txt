@@ -1,0 +1,650 @@
+import java.util.ArrayList;
+import java.util.List;
+
+interface Observer {
+    void update(String message);
+}
+
+class User implements Observer {
+    private String name;
+
+    public User(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public void update(String message) {
+        System.out.println(name + " received: " + message);
+    }
+}
+
+interface Subject {
+    void addObserver(Observer observer);
+    void removeObserver(Observer observer);
+    void notifyObservers();
+}
+
+class TransactionManager implements Subject {
+    private List<Observer> observers;
+    private List<String> transactions;
+
+    public TransactionManager() {
+        observers = new ArrayList<>();
+        transactions = new ArrayList<>();
+    }
+
+    @Override
+    public void addObserver(Observer observer) {
+        observers.add(observer);
+    }
+
+    @Override
+    public void removeObserver(Observer observer) {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers() {
+        for (Observer observer : observers) {
+            observer.update("New transaction added: " + transactions.get(transactions.size() - 1));
+        }
+    }
+
+    public void addTransaction(String transaction) {
+        transactions.add(transaction);
+        notifyObservers();
+    }
+}
+
+
+Strategy
+interface SplitStrategy {
+    void splitAmount(double amount, List<User> users);
+}
+
+class EqualSplitStrategy implements SplitStrategy {
+    @Override
+    public void splitAmount(double amount, List<User> users) {
+        double share = amount / users.size();
+        for (User user : users) {
+            System.out.println(user + " owes " + share);
+        }
+    }
+}
+
+class PercentageSplitStrategy implements SplitStrategy {
+    private double[] percentages;
+
+    public PercentageSplitStrategy(double[] percentages) {
+        this.percentages = percentages;
+    }
+
+    @Override
+    public void splitAmount(double amount, List<User> users) {
+        for (int i = 0; i < users.size(); i++) {
+            double share = amount * (percentages[i] / 100);
+            System.out.println(users.get(i) + " owes " + share);
+        }
+    }
+}
+
+class CustomSplitStrategy implements SplitStrategy {
+    private double[] shares;
+
+    public CustomSplitStrategy(double[] shares) {
+        this.shares = shares;
+    }
+
+    @Override
+    public void splitAmount(double amount, List<User> users) {
+        for (int i = 0; i < users.size(); i++) {
+            double share = shares[i];
+            System.out.println(users.get(i) + " owes " + share);
+        }
+    }
+}
+
+Splitwise class
+class Splitwise {
+    private SplitStrategy splitStrategy;
+
+    public Splitwise(SplitStrategy splitStrategy) {
+        this.splitStrategy = splitStrategy;
+    }
+
+    public void setSplitStrategy(SplitStrategy splitStrategy) {
+        this.splitStrategy = splitStrategy;
+    }
+
+    public void calculateSplit(double amount, List<User> users) {
+        splitStrategy.splitAmount(amount, users);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        // Create users
+        User user1 = new User("Alice");
+        User user2 = new User("Bob");
+        User user3 = new User("Charlie");
+
+        // Create Transaction Manager and add observers
+        TransactionManager transactionManager = new TransactionManager();
+        transactionManager.addObserver(user1);
+        transactionManager.addObserver(user2);
+        transactionManager.addObserver(user3);
+
+        // Create a splitting strategy (Equal Split)
+        SplitStrategy equalSplit = new EqualSplitStrategy();
+        Splitwise splitwise = new Splitwise(equalSplit);
+
+        // Adding transactions
+        transactionManager.addTransaction("Dinner - $60");
+
+        // Calculate split (example: $60 divided equally among 3 users)
+        splitwise.calculateSplit(60.0, List.of(user1, user2, user3));
+
+        // Change strategy to Percentage Split
+        double[] percentages = {50, 30, 20};
+        SplitStrategy percentageSplit = new PercentageSplitStrategy(percentages);
+        splitwise.setSplitStrategy(percentageSplit);
+
+        // Adding another transaction
+        transactionManager.addTransaction("Shopping - $100");
+
+        // Calculate split (example: $100 split with percentages)
+        splitwise.calculateSplit(100.0, List.of(user1, user2, user3));
+    }
+}
+
+Steps to integrate jdbc
+CREATE DATABASE splitwise;
+
+USE splitwise;
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    description VARCHAR(255),
+    amount DOUBLE,
+    user_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+Add jdbc dependency
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>8.0.29</version>
+</dependency>
+
+JDBC Utility class
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseUtil {
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/splitwise";
+    private static final String DB_USER = "root";  // Change to your DB username
+    private static final String DB_PASSWORD = "password";  // Change to your DB password
+
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+    }
+}
+Adding User
+import java.sql.*;
+
+public class UserDAO {
+    public static void addUser(String name) {
+        String query = "INSERT INTO users (name) VALUES (?)";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, name);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static User getUserById(int userId) {
+        String query = "SELECT * FROM users WHERE id = ?";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, userId);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return new User(resultSet.getInt("id"), resultSet.getString("name"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+}
+
+Adding transactiions
+public class TransactionDAO {
+    public static void addTransaction(int userId, String description, double amount) {
+        String query = "INSERT INTO transactions (description, amount, user_id) VALUES (?, ?, ?)";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, description);
+            statement.setDouble(2, amount);
+            statement.setInt(3, userId);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static List<Transaction> getTransactionsByUserId(int userId) {
+        List<Transaction> transactions = new ArrayList<>();
+        String query = "SELECT * FROM transactions WHERE user_id = ?";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, userId);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                transactions.add(new Transaction(
+                        resultSet.getInt("id"),
+                        resultSet.getString("description"),
+                        resultSet.getDouble("amount"),
+                        resultSet.getInt("user_id")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return transactions;
+    }
+}
+
+Update classes
+// User class with database ID
+class User implements Observer {
+    private int id;
+    private String name;
+
+    public User(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    @Override
+    public void update(String message) {
+        System.out.println(name + " received: " + message);
+    }
+}
+
+// Transaction class
+class Transaction {
+    private int id;
+    private String description;
+    private double amount;
+    private int userId;
+
+    public Transaction(int id, String description, double amount, int userId) {
+        this.id = id;
+        this.description = description;
+        this.amount = amount;
+        this.userId = userId;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+}
+Integrating with the main program
+public class Main {
+    public static void main(String[] args) {
+        // Create users in the database
+        UserDAO.addUser("Alice");
+        UserDAO.addUser("Bob");
+        UserDAO.addUser("Charlie");
+
+        // Fetch users from the database
+        User user1 = UserDAO.getUserById(1);  // Assume ID 1 corresponds to Alice
+        User user2 = UserDAO.getUserById(2);  // Assume ID 2 corresponds to Bob
+        User user3 = UserDAO.getUserById(3);  // Assume ID 3 corresponds to Charlie
+
+        // Create Transaction Manager and add observers
+        TransactionManager transactionManager = new TransactionManager();
+        transactionManager.addObserver(user1);
+        transactionManager.addObserver(user2);
+        transactionManager.addObserver(user3);
+
+        // Create a splitting strategy (Equal Split)
+        SplitStrategy equalSplit = new EqualSplitStrategy();
+        Splitwise splitwise = new Splitwise(equalSplit);
+
+        // Adding transactions to the database
+        TransactionDAO.addTransaction(user1.getId(), "Dinner - $60", 60.0);
+        
+        // Fetch transactions from the database and notify users
+        List<Transaction> transactions = TransactionDAO.getTransactionsByUserId(user1.getId());
+        for (Transaction transaction : transactions) {
+            transactionManager.addTransaction(transaction.getDescription());
+        }
+
+        // Calculate split (example: $60 divided equally among 3 users)
+        splitwise.calculateSplit(60.0, List.of(user1, user2, user3));
+    }
+}
+
+
+
+
+
+To explain the design of this code clearly, we can break down the key classes and their roles in the overall application. Here's a concise overview of the main classes you need to implement to build this Splitwise-like application, and how each of them interacts with the rest of the system.
+
+### Key Classes in the Code
+
+1. **User (Observer)**
+2. **TransactionManager (Subject/Observable)**
+3. **Transaction (Model Class)**
+4. **Database Utility (Database Utility)**
+5. **UserDAO (Database Access Object)**
+6. **TransactionDAO (Database Access Object)**
+7. **SplitStrategy (Strategy Pattern Interface)**
+8. **EqualSplitStrategy, PercentageSplitStrategy, CustomSplitStrategy (Concrete Strategy Classes)**
+9. **Splitwise (Context Class)**
+
+### Detailed Explanation of Classes:
+
+---
+
+#### 1. **User (Observer)**
+   - **Role**: Represents a user in the Splitwise application.
+   - **Responsibilities**: 
+     - Stores the user's information (like `id` and `name`).
+     - Implements the `Observer` interface to receive updates when a transaction occurs.
+     - Receives notifications from the `TransactionManager` when there are new transactions or updates.
+   - **Methods**: 
+     - `update(String message)`: Called when the user needs to be notified of a new transaction or event.
+   
+```java
+class User implements Observer {
+    private int id;
+    private String name;
+
+    public User(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    @Override
+    public void update(String message) {
+        System.out.println(name + " received: " + message);
+    }
+}
+```
+
+---
+
+#### 2. **TransactionManager (Subject/Observable)**
+   - **Role**: Manages the list of observers (users) and transactions.
+   - **Responsibilities**: 
+     - Keeps track of users and notifies them when a transaction is added.
+     - Implements the `Subject` interface to allow users to subscribe and unsubscribe to transaction notifications.
+     - Notifies users when a new transaction occurs, typically by calling `update` on each observer.
+   - **Methods**:
+     - `addObserver(Observer observer)`: Add a user to the list of observers.
+     - `removeObserver(Observer observer)`: Remove a user from the list of observers.
+     - `notifyObservers()`: Notify all registered users about a new transaction.
+     - `addTransaction(String transaction)`: Adds a transaction to the list and notifies users.
+   
+```java
+class TransactionManager implements Subject {
+    private List<Observer> observers = new ArrayList<>();
+    private List<String> transactions = new ArrayList<>();
+
+    @Override
+    public void addObserver(Observer observer) {
+        observers.add(observer);
+    }
+
+    @Override
+    public void removeObserver(Observer observer) {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers() {
+        for (Observer observer : observers) {
+            observer.update("New transaction added.");
+        }
+    }
+
+    public void addTransaction(String transaction) {
+        transactions.add(transaction);
+        notifyObservers();
+    }
+}
+```
+
+---
+
+#### 3. **Transaction (Model Class)**
+   - **Role**: Represents a transaction between users.
+   - **Responsibilities**: 
+     - Stores transaction details like `description`, `amount`, and `userId` (the ID of the user who initiated the transaction).
+   - **Attributes**: 
+     - `id`: The unique identifier for the transaction.
+     - `description`: A string describing the transaction.
+     - `amount`: The amount involved in the transaction.
+     - `userId`: The ID of the user who made the transaction.
+   
+```java
+class Transaction {
+    private int id;
+    private String description;
+    private double amount;
+    private int userId;
+
+    public Transaction(int id, String description, double amount, int userId) {
+        this.id = id;
+        this.description = description;
+        this.amount = amount;
+        this.userId = userId;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+}
+```
+
+---
+
+#### 4. **Database Utility (Database Utility)**
+   - **Role**: Provides a method to get a connection to the database.
+   - **Responsibilities**:
+     - Establishes and returns a database connection. This class is not responsible for CRUD operations but simply provides a method to get a connection.
+   
+```java
+class DatabaseUtil {
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/splitwise";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "password";
+
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+    }
+}
+```
+
+---
+
+#### 5. **UserDAO (Database Access Object for Users)**
+   - **Role**: Responsible for all database operations related to `User` (CRUD).
+   - **Responsibilities**:
+     - Adds a user to the database.
+     - Retrieves a user from the database by their ID.
+   - **Methods**:
+     - `addUser(String name)`: Adds a new user to the database.
+     - `getUserById(int userId)`: Retrieves a user by their ID.
+
+```java
+class UserDAO {
+    public static void addUser(String name) {
+        // Implement the code to add a user to the database.
+    }
+
+    public static User getUserById(int userId) {
+        // Implement the code to get a user from the database.
+        return null;
+    }
+}
+```
+
+---
+
+#### 6. **TransactionDAO (Database Access Object for Transactions)**
+   - **Role**: Handles database operations related to `Transaction` (CRUD).
+   - **Responsibilities**:
+     - Adds a transaction to the database.
+     - Retrieves transactions associated with a user.
+   - **Methods**:
+     - `addTransaction(int userId, String description, double amount)`: Adds a transaction to the database.
+     - `getTransactionsByUserId(int userId)`: Retrieves transactions for a given user.
+
+```java
+class TransactionDAO {
+    public static void addTransaction(int userId, String description, double amount) {
+        // Implement code to add a transaction to the database.
+    }
+
+    public static List<Transaction> getTransactionsByUserId(int userId) {
+        // Implement code to fetch transactions from the database.
+        return new ArrayList<>();
+    }
+}
+```
+
+---
+
+#### 7. **SplitStrategy (Strategy Pattern Interface)**
+   - **Role**: Defines the interface for splitting strategies.
+   - **Responsibilities**:
+     - Declares a method `splitAmount()` that defines how to split the amount among users.
+   
+```java
+interface SplitStrategy {
+    void splitAmount(double amount, List<User> users);
+}
+```
+
+---
+
+#### 8. **Concrete Strategy Classes:**
+   - **EqualSplitStrategy**: Implements the `SplitStrategy` to divide the amount equally among all users.
+   - **PercentageSplitStrategy**: Implements the `SplitStrategy` to divide the amount based on specified percentages.
+   - **CustomSplitStrategy**: Implements the `SplitStrategy` to divide the amount based on custom shares for each user.
+
+```java
+class EqualSplitStrategy implements SplitStrategy {
+    @Override
+    public void splitAmount(double amount, List<User> users) {
+        double share = amount / users.size();
+        for (User user : users) {
+            System.out.println(user + " owes " + share);
+        }
+    }
+}
+
+class PercentageSplitStrategy implements SplitStrategy {
+    private double[] percentages;
+
+    public PercentageSplitStrategy(double[] percentages) {
+        this.percentages = percentages;
+    }
+
+    @Override
+    public void splitAmount(double amount, List<User> users) {
+        for (int i = 0; i < users.size(); i++) {
+            double share = amount * (percentages[i] / 100);
+            System.out.println(users.get(i) + " owes " + share);
+        }
+    }
+}
+
+class CustomSplitStrategy implements SplitStrategy {
+    private double[] shares;
+
+    public CustomSplitStrategy(double[] shares) {
+        this.shares = shares;
+    }
+
+    @Override
+    public void splitAmount(double amount, List<User> users) {
+        for (int i = 0; i < users.size(); i++) {
+            double share = shares[i];
+            System.out.println(users.get(i) + " owes " + share);
+        }
+    }
+}
+```
+
+---
+
+#### 9. **Splitwise (Context Class for Strategy Pattern)**
+   - **Role**: The context class that uses the `SplitStrategy`.
+   - **Responsibilities**:
+     - Holds a reference to a `SplitStrategy` object.
+     - Allows changing the strategy at runtime with the method `setSplitStrategy()`.
+     - Uses the strategy to perform the split calculation with the `calculateSplit()` method.
+   
+```java
+class Splitwise {
+    private SplitStrategy splitStrategy;
+
+    public Splitwise(SplitStrategy splitStrategy) {
+        this.splitStrategy = splitStrategy;
+    }
+
+    public void setSplitStrategy(SplitStrategy splitStrategy) {
+        this.splitStrategy = splitStrategy;
+    }
+
+    public void calculateSplit(double amount, List<User> users) {
+        splitStrategy.splitAmount(amount, users);
+    }
+}
+```
+
+---
+
+### Summary of the Design:
+1. **Observer Pattern** is used for notifying users about new transactions. The `User` class is the observer and `TransactionManager` is the subject.
+2. **Strategy Pattern** is used for different ways of splitting expenses (e.g., equal, percentage-based, or custom). The `SplitStrategy` interface and its concrete implementations handle the different splitting strategies.
+3. **Database Layer** (`UserDAO` and `TransactionDAO`) handles interaction with the database for storing and retrieving users and transactions.
+
+This approach modularizes the code into clear components: **Observers** (users), **Subjects** (transaction manager), **Strategy** (splitting strategies), and **Data Access** (database interaction).
